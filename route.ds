@@ -1,0 +1,58 @@
+import { NextRequest, NextResponse } from "next/server";
+import { promises as fs } from "fs";
+import * as XLSX from "xlsx";
+import path from "path";
+
+export async function GET(req: NextRequest) {
+  try {
+    const filePath = path.join(process.cwd(), "public", "file.xlsx");
+    const fileBuffer = await fs.readFile(filePath);
+
+    const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    for (let i = 0; i < 7; i++) {
+      // Extract the first entry
+      const entry = worksheet[i];
+
+      // Replace the URL with your actual API endpoint
+      const apiUrl = "https://app.noest-dz.com/api/public/create/order";
+
+      console.log("Entry: ", entry);
+      const payload = {
+        api_token: "",
+        user_guid: "",
+        client: entry.client,
+        phone: entry.phone,
+        adresse: entry.adresse || entry.commune,
+        wilaya_id: entry.wilaya_id, // Example wilaya ID
+        commune: entry.commune,
+        montant: entry.montant, // Example amount
+        produit: `chemise ${entry.produit} ${entry.size}`,
+        type_id: entry.type_id === "echange" ? 2 : 1, // Example type ID
+        poids: 1, // Example weight
+        stop_desk: entry.stop_desk === "domicile" ? 0 : 1, // Example stop desk option
+      };
+
+      try {
+        const apiResponse = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+        const apiData = await apiResponse.json();
+        console.log("Response from server:", apiData);
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    }
+    // Respond to the client
+    return NextResponse.json({ message: "Data processed successfully" });
+  } catch (error) {
+    console.error("Error reading or processing the file:", error);
+    return NextResponse.json({ error: "Internal Server Error" });
+  }
+}
