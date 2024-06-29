@@ -16,13 +16,10 @@ export default function Home() {
     }
 
     const formData = new FormData();
-    formData.append("file", file);
-
+    formData.set("file", file);
+    
     try {
       const response = await fetch("/api/excel", {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
         method: "POST",
         body: formData,
       });
