@@ -1,3 +1,4 @@
+// TODO: limit end to empty columns bcz its returning error for those
 import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { unlink, writeFileSync, readFileSync } from "fs";
@@ -35,22 +36,22 @@ export async function POST(req: NextRequest) {
     const apiUrl = "https://app.noest-dz.com/api/public/create/order";
 
     let limit = sheetData.length;
-    if (end != 0) limit = end;
+    if (end != -2) limit = end;
 
     for (let i = start; i <= limit; i++) {
       let entry = sheetData[i];
 
       const payload = {
-        api_token: "",
-        user_guid: "",
+        api_token: "DIEqPfBW9qUmOzjDxVBQnj70IHKaSVqrZwO",
+        user_guid: "RZR6PM3K",
         client: entry.client,
         phone: `0${entry.phone}`,
         adresse: entry.adresse || entry.commune,
         wilaya_id: entry.wilaya_id, // Example wilaya ID i put 10 bcz the api accepts wilaya ids (1,48) , hard coded but will be replaced later
         commune: entry.commune,
         montant: entry.montant, // Example amount
-        produit: `${entry.produit} ${entry.size}`,
-        type_id: 1, // Example type ID
+        produit: `${entry.produit}`,
+        type_id: entry.type_id == "echange" ? 2 : 1, // Example type ID
         poids: 1, // Example weight
         stop_desk: entry.stop_desk ? 0 : 1, // Example stop desk option
       };
